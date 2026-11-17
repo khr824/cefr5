@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CEFR Level Analyzer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1d2330;--mut:#6a7183;--line:#e4e2da;--acc:#2f5bea;--accs:#e6ecff;--g:#d9480f;--gs:#ffe8d9;--v:#0b7a75;--vs:#d8f3f1;--ok:#2b8a3e;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#13161d;--card:#1c212b;--ink:#e8eaf0;--mut:#98a0b3;--line:#2c3240;--acc:#7c9bff;--accs:#262f52;--g:#ff9a62;--gs:#4a2c1c;--v:#4fd1c5;--vs:#173a38;--ok:#69db7c}}
+:root[data-theme="dark"]{--bg:#13161d;--card:#1c212b;--ink:#e8eaf0;--mut:#98a0b3;--line:#2c3240;--acc:#7c9bff;--accs:#262f52;--g:#ff9a62;--gs:#4a2c1c;--v:#4fd1c5;--vs:#173a38;--ok:#69db7c}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Inter",system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:24px 16px 60px}
+h1{font:700 28px/1.2 Georgia,"Times New Roman",serif;margin:0 0 4px}
+h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:0 0 12px}
+.sub{color:var(--mut);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.grid{display:grid;gap:16px;grid-template-columns:1fr 1fr}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:.15s}
+.drop:hover,.drop.on{border-color:var(--acc);background:var(--accs)}
+.drop b{display:block;font-size:16px}.drop small{color:var(--mut)}
+textarea{width:100%;min-height:90px;margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg);color:var(--ink);font:inherit;resize:vertical}
+button{font:inherit;border:0;border-radius:10px;padding:10px 18px;background:var(--acc);color:#fff;cursor:pointer;font-weight:600}
+button.ghost{background:var(--accs);color:var(--acc)}button:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+#fname{color:var(--mut);font-size:13px}
+#status{margin:12px 0;color:var(--mut)}#status.err{color:var(--g)}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:s .8s linear infinite;vertical-align:-2px;margin-right:8px}
+@keyframes s{to{transform:rotate(360deg)}}
+.hero{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.big{font:700 64px/1 Georgia,serif;color:var(--acc);min-width:110px}
+.ladder{display:flex;gap:6px;margin:8px 0}
+.ladder span{flex:1;text-align:center;padding:6px 0;border-radius:8px;background:var(--bg);border:1px solid var(--line);font-weight:600;font-size:13px;color:var(--mut)}
+.ladder span.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.bar{height:10px;background:var(--bg);border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:var(--acc);border-radius:6px;transition:width .6s}
+.crit{margin-bottom:14px;cursor:pointer}.crit .h{display:flex;justify-content:space-between;font-weight:600;margin-bottom:4px}
+.crit .d{display:none;color:var(--mut);font-size:13.5px;margin-top:6px}.crit.open .d{display:block}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--gs);color:var(--g);border:1px solid transparent;border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.chip.sel{border-color:var(--g)}.chip em{font-style:normal;opacity:.7;margin-left:6px}
+.pbar{display:flex;align-items:center;gap:10px;margin:7px 0;cursor:pointer;font-size:13.5px}
+.pbar .n{width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pbar .b{flex:1;height:14px;background:var(--bg);border-radius:7px;overflow:hidden}
+.pbar .b i{display:block;height:100%;background:var(--g);border-radius:7px}
+.pbar.sel .n{font-weight:700}.pbar.dim{opacity:.4}
+.ex{border-left:3px solid var(--g);padding:6px 12px;margin:10px 0;background:var(--bg);border-radius:0 8px 8px 0;font-size:14px}
+.ex s{color:var(--g)}.ex b{color:var(--ok)}.ex small{display:block;color:var(--mut)}
+.vcard{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.vgrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.vcard .o{color:var(--mut);text-decoration:line-through}.vcard .s{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.vcard .s span{background:var(--vs);color:var(--v);border-radius:6px;padding:2px 8px;font-weight:600;font-size:13px}
+.lv{font-size:11px;background:var(--accs);color:var(--acc);border-radius:5px;padding:1px 6px;font-weight:700}
+.txt{white-space:pre-wrap;line-height:1.8;max-height:340px;overflow:auto}
+mark{border-radius:4px;padding:1px 3px;cursor:pointer;color:inherit}
+mark.g{background:var(--gs);border-bottom:2px solid var(--g)}mark.v{background:var(--vs);border-bottom:2px solid var(--v)}
+mark.dim{background:transparent;border-color:transparent}
+.dist{display:flex;align-items:flex-end;gap:8px;height:110px}.dist div{flex:1;text-align:center;font-size:12px}
+.dist i{display:block;background:var(--acc);border-radius:5px 5px 0 0;margin-bottom:4px;opacity:.85}
+.stat{display:flex;gap:14px;flex-wrap:wrap}.stat div{flex:1;min-width:100px;background:var(--bg);border-radius:10px;padding:10px;text-align:center}
+.stat b{display:block;font-size:22px}.stat span{font-size:12px;color:var(--mut)}
+ul.t{margin:6px 0;padding-left:20px}.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>CEFR Level Analyzer</h1>
+<p class="sub">Upload writing (PDF, Word, text or a photo of handwriting) and get an estimated CEFR level, grammar patterns and vocabulary upgrades. Scored with the Cambridge IGCSE criteria; length is not considered.</p>
+
+<div class="card">
+ <div class="drop" id="drop"><b>Drop a file here or click to browse</b><small>.pdf · .docx · .txt · .png / .jpg / .webp</small>
+ <input type="file" id="file" class="hide" accept=".pdf,.docx,.txt,.md,image/*"></div>
+ <textarea id="paste" placeholder="…or paste your text here"></textarea>
+ <div class="row"><button id="go">Analyze</button><span id="fname"></span></div>
+ <div id="status"></div>
+</div>
+
+<div id="out" class="hide">
+ <div class="card"><div class="hero"><div><h2>Estimated level</h2><div class="big" id="lvl"></div></div>
+  <div style="flex:1;min-width:240px"><div class="ladder" id="ladder"></div><div id="sum"></div></div></div></div>
+
+ <div class="grid">
+  <div class="card"><h2>Rubric scores (tap to expand)</h2><div id="crit"></div></div>
+  <div class="card"><h2>Text profile</h2><div class="stat" id="stats"></div>
+   <h2 style="margin-top:18px">Estimated vocabulary by CEFR level</h2><div class="dist" id="dist"></div>
+   <h2 style="margin-top:18px">Strengths</h2><ul class="t" id="str"></ul></div>
+ </div>
+
+ <div class="card"><h2>Grammar patterns — select one to see where it occurs</h2><div id="pat"></div><div id="exs"></div></div>
+ <div class="card"><h2>Vocabulary upgrades</h2><div class="vgrid" id="voc"></div></div>
+ <div class="grid">
+  <div class="card"><h2>Linking words &amp; cohesion</h2><div id="link"></div></div>
+  <div class="card"><h2>Your text, annotated <span style="text-transform:none;letter-spacing:0">(<mark class="g">grammar</mark> <mark class="v">vocabulary</mark>)</span></h2><div class="txt" id="txt"></div></div>
+ </div>
+</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const LV=["A1","A2","B1","B2","C1","C2"];
+let TEXT="",IMGS=[],R=null,SEL=null;
+
+const PROMPT=`You are an expert CEFR examiner. Assess the learner's writing (English unless clearly another language; assess that language) using the Cambridge IGCSE mark-scheme criteria below. IGNORE word count entirely: judge short and long texts by quality only.
+Criteria, each scored 0-8 using bands 7-8 (excellent), 5-6 (good), 3-4 (reasonable), 1-2 (limited), 0 (nothing):
+1 Relevance: fulfils task, appropriate style/register, sense of purpose and audience.
+2 Development of ideas: content developed and communicated clearly.
+3 Range and accuracy: breadth of common and less common vocabulary and simple/complex structures; accuracy; whether errors impede meaning.
+4 Organisation: sequencing and range of linking words/cohesive devices.
+Infer the task from the text itself. Then give an overall CEFR level (A1,A2,B1,B2,C1,C2) based on the evidence. Be honest and specific, quote exact text.
+Return ONLY valid JSON (no markdown) in this shape:
+{"transcript":"full text if the input was an image, else empty string",
+"cefr":"B1","confidence":"low|medium|high","summary":"2-3 sentences",
+"criteria":[{"name":"Relevance","score":5,"band":"5-6","evidence":"...","next":"one concrete tip"},{"name":"Development of ideas",...},{"name":"Range and accuracy",...},{"name":"Organisation",...}],
+"stats":{"sentences":0,"avgSentenceLength":0,"complexSentencePct":0,"uniqueWordPct":0},
+"wordLevels":{"A1":0,"A2":0,"B1":0,"B2":0,"C1":0,"C2":0},
+"strengths":["..."],
+"grammar":[{"pattern":"Subject-verb agreement","severity":"high|medium|low","examples":[{"original":"exact substring from text","fix":"corrected","why":"short rule explanation"}]}],
+"vocab":[{"original":"exact word/phrase from text","suggestions":["better1","better2"],"level":"target CEFR of suggestions","note":"why/context"}],
+"linking":{"used":["and","but"],"suggested":[{"word":"nevertheless","use":"contrast, formal"}]}}
+wordLevels are percentages summing to ~100. Give 3-8 grammar patterns (most frequent/important first) with 1-4 examples each, and 5-12 vocab upgrades. "original" strings MUST appear verbatim in the text.`;
+
+/* ---------- file reading ---------- */
+const drop=$("drop"),fi=$("file");
+drop.onclick=()=>fi.click();
+["dragover","dragenter"].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add("on")}));
+["dragleave","drop"].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove("on")}));
+drop.addEventListener("drop",e=>{if(e.dataTransfer.files[0])load(e.dataTransfer.files[0])});
+fi.onchange=()=>fi.files[0]&&load(fi.files[0]);
+
+function status(m,err,spin){const s=$("status");s.className=err?"err":"";s.innerHTML=(spin?'<span class="spin"></span>':"")+esc(m)}
+async function load(f){
+ $("fname").textContent=f.name;TEXT="";IMGS=[];status("Reading file…",0,1);
+ try{
+  const n=f.name.toLowerCase();
+  if(f.type.startsWith("image/")){IMGS=[f];TEXT="";}
+  else if(n.endsWith(".pdf")) await readPdf(f);
+  else if(n.endsWith(".docx")) TEXT=(await mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()})).value;
+  else TEXT=await f.text();
+  $("paste").value=TEXT;
+  status(IMGS.length?"Image ready. Press Analyze.":"Loaded "+TEXT.length+" characters. Press Analyze.");
+ }catch(e){status("Could not read that file: "+(e.message||e),1)}
+}
+async function readPdf(f){
+ pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+ const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;let t="";
+ for(let i=1;i<=pdf.numPages;i++){const p=await pdf.getPage(i);t+=(await p.getTextContent()).items.map(x=>x.str).join(" ")+"\n"}
+ if(t.trim().length>20){TEXT=t.trim();return}
+ for(let i=1;i<=Math.min(pdf.numPages,4);i++){ // scanned PDF -> images
+  const p=await pdf.getPage(i),v=p.getViewport({scale:1.6}),c=document.createElement("canvas");c.width=v.width;c.height=v.height;
+  await p.render({canvasContext:c.getContext("2d"),viewport:v}).promise;
+  IMGS.push(await new Promise(r=>c.toBlob(r,"image/jpeg",.85)));
+ }
+}
+
+/* ---------- analysis ---------- */
+$("go").onclick=async()=>{
+ const typed=$("paste").value.trim();if(typed&&!IMGS.length)TEXT=typed;
+ if(!TEXT&&!IMGS.length)return status("Please upload a file or paste some text.",1);
+ $("go").disabled=true;status("Analyzing — this takes about 20–40 seconds…",0,1);
+ try{
+  const sample=await claude.use("sample");
+  if(!sample)throw new Error("AI analysis is unavailable in this view. Open the page signed in to claude.ai.");
+  const opts={modelTier:"default",cache:false};
+  if(IMGS.length){const l=await sample.limits();if(!l.images)throw new Error("Image analysis isn’t available here. Paste the text instead.");opts.images=IMGS}
+  const input=PROMPT+"\n\n"+(IMGS.length?"The writing is in the attached image(s). Transcribe it in \"transcript\" (keep errors as written).":"TEXT:\n\"\"\"\n"+TEXT+"\n\"\"\"");
+  const res=await sample(input,opts);
+  const m=res.text.replace(/```json|```/g,"").match(/\{[\s\S]*\}/);
+  R=JSON.parse(m[0]);
+  if(IMGS.length)TEXT=R.transcript||"";
+  render();status("");
+ }catch(e){status(e.message||e.code||"Something went wrong. Please try again.",1)}
+ $("go").disabled=false;
+};
+
+/* ---------- dashboard ---------- */
+function render(){
+ $("out").classList.remove("hide");SEL=null;
+ const c=(R.cefr||"").toUpperCase();$("lvl").textContent=c;
+ $("ladder").innerHTML=LV.map(l=>`<span class="${l==c?"on":""}">${l}</span>`).join("");
+ $("sum").innerHTML=esc(R.summary)+` <span class="lv">confidence: ${esc(R.confidence||"medium")}</span>`;
+ $("crit").innerHTML=(R.criteria||[]).map(k=>`<div class="crit" onclick="this.classList.toggle('open')"><div class="h"><span>${esc(k.name)}</span><span>${k.score}/8 · band ${esc(k.band)}</span></div>
+  <div class="bar"><i style="width:${k.score/8*100}%"></i></div><div class="d">${esc(k.evidence)}<br><b>Next step:</b> ${esc(k.next)}</div></div>`).join("");
+ const s=R.stats||{};
+ $("stats").innerHTML=[["sentences",s.sentences],["avg words / sentence",s.avgSentenceLength],["complex sentences",(s.complexSentencePct??"–")+"%"],["unique words",(s.uniqueWordPct??"–")+"%"]].map(([l,v])=>`<div><b>${esc(v)}</b><span>${l}</span></div>`).join("");
+ const w=R.wordLevels||{},mx=Math.max(1,...LV.map(l=>w[l]||0));
+ $("dist").innerHTML=LV.map(l=>`<div><i style="height:${(w[l]||0)/mx*80}px"></i>${l}<br>${w[l]||0}%</div>`).join("");
+ $("str").innerHTML=(R.strengths||[]).map(x=>`<li>${esc(x)}</li>`).join("");
+ drawPatterns();drawVocab();
+ const L=R.linking||{};
+ $("link").innerHTML=`<b>You used:</b><div class="chips" style="margin:8px 0 14px">${(L.used||[]).map(x=>`<span class="chip" style="background:var(--accs);color:var(--acc);cursor:default">${esc(x)}</span>`).join("")||"–"}</div><b>Try adding:</b>`+
+  (L.suggested||[]).map(x=>`<div class="vcard" style="margin-top:8px"><span class="lv">${esc(x.word)}</span> ${esc(x.use)}</div>`).join("");
+ drawText();$("out").scrollIntoView({behavior:"smooth"});
+}
+function drawPatterns(){
+ const P=R.grammar||[],mx=Math.max(1,...P.map(p=>p.examples.length));
+ $("pat").innerHTML=P.map((p,i)=>`<div class="pbar ${SEL===i?"sel":SEL!==null?"dim":""}" onclick="pick(${i})"><span class="n">${esc(p.pattern)}</span>
+  <span class="b"><i style="width:${p.examples.length/mx*100}%"></i></span><span class="lv">${p.examples.length}× · ${esc(p.severity)}</span></div>`).join("")||"No significant grammar issues found.";
+ const sh=SEL===null?P:[P[SEL]];
+ $("exs").innerHTML=sh.map(p=>p.examples.map(e=>`<div class="ex">${SEL===null?`<small>${esc(p.pattern)}</small>`:""}<s>${esc(e.original)}</s> → <b>${esc(e.fix)}</b><small>${esc(e.why)}</small></div>`).join("")).join("");
+}
+function pick(i){SEL=SEL===i?null:i;drawPatterns();drawText();drawVocab()}
+function drawVocab(){
+ $("voc").innerHTML=(R.vocab||[]).map(v=>`<div class="vcard"><span class="o">${esc(v.original)}</span> <span class="lv">→ ${esc(v.level)}</span>
+  <div class="s">${(v.suggestions||[]).map(x=>`<span>${esc(x)}</span>`).join("")}</div><small style="color:var(--mut)">${esc(v.note)}</small></div>`).join("")||"No suggestions."
+}
+function drawText(){
+ const R2=[];const add=(o,cls,tip,pi)=>{if(!o)return;const i=TEXT.indexOf(o);if(i>=0)R2.push({a:i,b:i+o.length,cls,tip,pi})};
+ (R.grammar||[]).forEach((p,pi)=>p.examples.forEach(e=>add(e.original,"g",e.fix,pi)));
+ (R.vocab||[]).forEach(v=>add(v.original,"v",(v.suggestions||[]).join(", "),-1));
+ R2.sort((x,y)=>x.a-y.a);let out="",pos=0;
+ for(const r of R2){if(r.a<pos)continue;out+=esc(TEXT.slice(pos,r.a));
+  const dim=SEL!==null&&r.pi!==SEL?" dim":"";
+  out+=`<mark class="${r.cls}${dim}" title="${esc(r.tip)}" ${r.pi>=0?`onclick="pick(${r.pi})"`:""}>${esc(TEXT.slice(r.a,r.b))}</mark>`;pos=r.b}
+ $("txt").innerHTML=out+esc(TEXT.slice(pos));
+}
+</script>
+</body>
+</html>
